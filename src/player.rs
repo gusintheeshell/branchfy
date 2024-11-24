@@ -1,8 +1,11 @@
 use crate::config::Config;
-use rspotify::model::{PlayableItem, PlaylistId};
+use rspotify::model::{PlayableItem, PlaylistId, Token};
 use rspotify::prelude::*;
 use rspotify::{scopes, AuthCodeSpotify, Credentials, OAuth};
+use std::fs;
 use std::io::{self, BufRead};
+
+const TOKEN_FILE: &str = "spotify_token.json";
 
 pub struct Player;
 
@@ -20,11 +23,37 @@ impl Player {
 
             spotify.request_token(&code).await?;
 
-            if spotify.get_token().lock().await.unwrap().is_none() {
+            let token_ref = spotify.get_token();
+            let token = {
+                let token_lock = token_ref.lock().await;
+                token_lock.unwrap().clone()
+            };
+            if let Some(token) = token.clone() {
+                fs::write(TOKEN_FILE, serde_json::to_string(&token)?)?;
+            } else {
                 return Err("Failed to get access token".into());
             }
 
             Ok(())
+        }
+
+        async fn load_token(spotify: &AuthCodeSpotify) -> Result<bool, Box<dyn std::error::Error>> {
+            if let Ok(token_data) = fs::read_to_string(TOKEN_FILE) {
+                if let Ok(token) = serde_json::from_str::<Token>(&token_data) {
+                    let mut token_guard = match spotify.token.lock().await {
+                        Ok(guard) => guard,
+                        Err(e) => {
+                            return Err(<Box<dyn std::error::Error>>::from(format!(
+                                "Failed to acquire lock: {:?}",
+                                e
+                            )))
+                        }
+                    };
+                    token_guard.replace(token);
+                    return Ok(true);
+                }
+            }
+            Ok(false)
         }
 
         let creds = Credentials::from_env().unwrap();
@@ -35,34 +64,43 @@ impl Player {
         .unwrap();
         let spotify = AuthCodeSpotify::new(creds, oauth);
 
-        if let Err(e) = authenticate_spotify(&spotify).await {
-            eprintln!("Error authenticating Spotify: {}", e);
-            return;
+        if !load_token(&spotify).await.unwrap() {
+            if let Err(e) = authenticate_spotify(&spotify).await {
+                eprintln!("Error authenticating Spotify: {}", e);
+                return;
+            }
+        }
+
+        if spotify.refresh_token().await.is_err() {
+            if let Err(e) = authenticate_spotify(&spotify).await {
+                eprintln!("Error re-authenticating Spotify: {}", e);
+                return;
+            }
         }
 
         let devices = spotify.device().await.unwrap();
         if devices.is_empty() {
-            println!("Nenhum dispositivo ativo encontrado. Abra o aplicativo do Spotify e tente novamente.");
+            println!("No active devices found. Open the Spotify app and try again.");
             return;
         } else {
-            println!("Dispositivos ativos:");
+            println!("Active devices:");
             for device in devices.iter() {
                 println!(
                     "{} - {}",
-                    device.id.as_deref().unwrap_or("ID desconhecido"),
+                    device.id.as_deref().unwrap_or("Unknown ID"),
                     device.name
                 );
             }
         }
 
-        let playlist_id = PlaylistId::from_id(playlist_id).expect("ID da playlist inválido");
+        let playlist_id = PlaylistId::from_id(playlist_id).expect("Invalid playlist ID");
         let device_id = devices.get(0).and_then(|d| d.id.clone());
 
         if let Err(err) = spotify
             .start_context_playback(playlist_id.into(), device_id.as_deref(), None, None)
             .await
         {
-            eprintln!("Erro ao iniciar a reprodução: {:?}", err);
+            eprintln!("Error starting playback: {:?}", err);
             return;
         }
 
@@ -71,17 +109,17 @@ impl Player {
             if let Some(item) = current_playback.item {
                 match item {
                     PlayableItem::Track(track) => {
-                        println!("Tocando: {}", track.name);
+                        println!("Playing: {}", track.name);
                     }
                     PlayableItem::Episode(episode) => {
-                        println!("Tocando episódio: {}", episode.name);
+                        println!("Playing episode: {}", episode.name);
                     }
                 }
             } else {
-                println!("Nenhuma música ou episódio sendo reproduzido.");
+                println!("No track or episode is currently playing.");
             }
         } else {
-            println!("Não há reprodução atual.");
+            println!("No current playback.");
         }
     }
 }

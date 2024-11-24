@@ -1,0 +1,62 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+    <style>
+        {`
+        @keyframes growBranch {
+        from { stroke-dashoffset: 200; }
+        to { stroke-dashoffset: 0; }
+        }
+        @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+        }
+        @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+        }
+        .branch {
+        stroke-dasharray: 200;
+        stroke-dashoffset: 200;
+        animation: growBranch 2s ease forwards;
+        }
+        .leaf {
+        animation: fadeIn 0.5s ease forwards;
+        opacity: 0;
+        }
+        .note {
+        animation: bounce 1s ease infinite;
+        }
+        .text {
+        animation: fadeIn 1s ease forwards;
+        opacity: 0;
+        }
+        `}
+    </style>
+    </defs>
+
+    {/* Main branch */}
+    <path d="M100 180 L100 80" className="branch" fill="none" stroke="#2e7d32" strokeWidth="8" strokeLinecap="round" />
+
+    {/* Left branch */}
+    <path d="M100 120 L60 80" className="branch" fill="none" stroke="#2e7d32" strokeWidth="6" strokeLinecap="round" style={{ animationDelay: '0.5s' }} />
+
+    {/* Right branch */}
+    <path d="M100 100 L140 60" className="branch" fill="none" stroke="#2e7d32" strokeWidth="6" strokeLinecap="round" style={{ animationDelay: '1s' }} />
+
+    {/* Leaves */}
+    <circle cx="100" cy="80" r="8" className="leaf" fill="#4caf50" style={{ animationDelay: '2s' }} />
+    <circle cx="60" cy="80" r="6" className="leaf" fill="#4caf50" style={{ animationDelay: '2.2s' }} />
+    <circle cx="140" cy="60" r="6" className="leaf" fill="#4caf50" style={{ animationDelay: '2.4s' }} />
+
+    {/* Musical notes */}
+    <path d="M70 70 L70 40 L78 38 L78 68 Z" className="note" fill="#9c27b0" style={{ animationDelay: '0.2s' }} />
+    <circle cx="66" cy="68" r="4" fill="#9c27b0" className="note" style={{ animationDelay: '0.2s' }} />
+
+    <path d="M130 50 L130 20 L138 18 L138 48 Z" className="note" fill="#9c27b0" style={{ animationDelay: '0.4s' }} />
+    <circle cx="126" cy="48" r="4" fill="#9c27b0" className="note" style={{ animationDelay: '0.4s' }} />
+
+    {/* Text */}
+    <text x="100" y="160" fontFamily="Arial, sans-serif" fontSize="24" fontWeight="bold" textAnchor="middle" fill="#333" className="text" style={{ animationDelay: '2.5s' }}>
+    branchfy
+    </text>
+</svg>

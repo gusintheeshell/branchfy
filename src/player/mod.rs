@@ -26,10 +26,29 @@ impl Player {
         duration_ms: u32,
     ) {
         let pb = ProgressBar::new(duration_ms as u64);
+        pb.enable_steady_tick(Duration::from_millis(100));
+
         pb.set_style(
             ProgressStyle::default_bar()
-                .template("{spinner:.green} {msg}\n[{elapsed_precise}] [{bar:40.cyan/blue}] [{pos}/{len}]")
+                .template("{spinner:.green} {msg}\n{bar:40.cyan/blue} {pos_prefix}/{len_prefix}")
                 .unwrap()
+                .with_key(
+                    "pos_prefix",
+                    |state: &indicatif::ProgressState, w: &mut dyn std::fmt::Write| {
+                        write!(w, "{}", Self::format_duration(state.pos() as u32)).unwrap()
+                    },
+                )
+                .with_key(
+                    "len_prefix",
+                    |state: &indicatif::ProgressState, w: &mut dyn std::fmt::Write| {
+                        write!(
+                            w,
+                            "{}",
+                            Self::format_duration(state.len().unwrap_or(0) as u32)
+                        )
+                        .unwrap()
+                    },
+                )
                 .progress_chars("=>-"),
         );
 

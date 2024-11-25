@@ -1,29 +1,36 @@
 mod config;
+mod daemon;
 mod git;
 mod player;
 mod watcher;
 
 use crate::config::Config;
+use crate::daemon::Daemon;
+use directories::ProjectDirs;
 use std::process::exit;
-use watcher::BranchWatcher;
 
 #[tokio::main]
 async fn main() {
-    let config = Config::load_or_create().unwrap_or_else(|err| {
+    let proj_dirs = ProjectDirs::from("com", "branchfy", "branchfy")
+        .expect("Failed to get project directories");
+
+    let config_dir = proj_dirs.config_dir();
+    std::fs::create_dir_all(config_dir).expect("Failed to create config directory");
+
+    let config_path = config_dir.join("config.json");
+
+    let config = Config::load_or_create_global(&config_path).unwrap_or_else(|err| {
         eprintln!("Error loading configuration: {}", err);
         exit(1);
     });
 
-    let mut watcher = BranchWatcher::new(config).unwrap_or_else(|err| {
-        eprintln!("Error creating watcher: {}", err);
-        exit(1);
-    });
+    let daemon = Daemon::new(config);
 
     ctrlc::set_handler(move || {
-        println!("Shutting down player...");
+        println!("Shutting down branchfy daemon...");
         exit(0);
     })
-    .expect("Error setting Ctrl+C handler");
+    .expect("Error setting Ctrl-C handler");
 
-    watcher.start().await;
+    daemon.start().await;
 }

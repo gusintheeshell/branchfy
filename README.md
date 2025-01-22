@@ -1,7 +1,5 @@
 # Branchfy 🎵
 
-![Branchfy Logo](./logo-animated.svg){ width=200 }
-
 A Rust application that plays different Spotify playlists based on the prefix of your current git branch.
 
 ## Features

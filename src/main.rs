@@ -1,9 +1,11 @@
+mod cli;
 mod config;
 mod daemon;
 mod git;
 mod player;
 mod watcher;
 
+use crate::cli::run as cli_run;
 use crate::config::Config;
 use crate::daemon::Daemon;
 use directories::ProjectDirs;
@@ -11,6 +13,8 @@ use std::process::exit;
 
 #[tokio::main]
 async fn main() {
+    cli_run();
+
     let proj_dirs = ProjectDirs::from("com", "branchfy", "branchfy")
         .expect("Failed to get project directories");
 

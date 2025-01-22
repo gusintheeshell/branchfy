@@ -58,10 +58,8 @@ impl Player {
         loop {
             if let Ok(Some(playback)) = spotify.current_playback(None, None::<&[_]>).await {
                 if let Some(progress_ms) = playback.progress {
-                    // Changed from progress to progress_ms
                     pb.set_position(progress_ms.num_milliseconds() as u64);
 
-                    // Format progress/total time
                     let current = Self::format_duration(progress_ms.num_milliseconds() as u32);
                     let total = Self::format_duration(duration_ms);
                     pb.set_message(format!("Playing: {} ({}/{})", track_name, current, total));
@@ -100,8 +98,10 @@ impl Player {
                 return Err("Failed to get access token".into());
             }
 
-            if let Some(current_playback) =
-                spotify.current_playback(None, None::<&[_]>).await.unwrap()
+            if let Some(current_playback) = spotify
+                .current_playback(None, None::<&[_]>)
+                .await
+                .unwrap_or(None)
             {
                 if let Some(item) = current_playback.item {
                     match item {
@@ -118,13 +118,19 @@ impl Player {
                                     duration_ms,
                                 )
                                 .await;
+                            } else {
+                                println!("Progress or duration is None.");
                             }
                         }
                         PlayableItem::Episode(episode) => {
                             println!("Playing episode: {}", episode.name)
                         }
                     }
+                } else {
+                    println!("No item is currently playing.");
                 }
+            } else {
+                println!("No current playback.");
             }
 
             Ok(())
@@ -178,11 +184,7 @@ impl Player {
         } else {
             println!("Active devices:");
             for device in devices.iter() {
-                println!(
-                    "{} - {}",
-                    device.id.as_deref().unwrap_or("Unknown ID"),
-                    device.name
-                );
+                println!("{}", device.name);
             }
         }
 
@@ -197,7 +199,10 @@ impl Player {
             return;
         }
 
-        if let Some(current_playback) = spotify.current_playback(None, None::<&[_]>).await.unwrap()
+        if let Some(current_playback) = spotify
+            .current_playback(None, None::<&[_]>)
+            .await
+            .unwrap_or(None)
         {
             if let Some(item) = current_playback.item {
                 match item {

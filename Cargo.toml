@@ -3,6 +3,10 @@ name = "branchfy"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "branchfy"
+path = "src/main.rs"
+
 [dependencies]
 rspotify = { version = "0.13.3" }
 git2 = "0.13"
@@ -14,6 +18,8 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 notify = "5.0"
 walkdir = "2.3"
+indicatif = "0.17"
 dirs = "5.0"
 directories = "4.0"
-indicatif = "0.17"
+clap = { version = "3.0", features = ["derive"] }
+shellexpand = "2.1"

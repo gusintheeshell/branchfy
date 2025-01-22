@@ -184,11 +184,7 @@ impl Player {
         } else {
             println!("Active devices:");
             for device in devices.iter() {
-                println!(
-                    "{} - {}",
-                    device.id.as_deref().unwrap_or("Unknown ID"),
-                    device.name
-                );
+                println!("{}", device.name);
             }
         }
 

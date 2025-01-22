@@ -54,20 +54,8 @@ By default:
 
 ## Commands
 
-- `Ctrl+C` - Stops the execution
+- `Ctrl+C` or `branchfy stop` - Stops the execution
 - The music keeps playing until you explicitly stop it
-
-## Structure
-
-.
-├── src/
-│ ├── main.rs # Entry point
-│ ├── config.rs # Config management
-│ ├── git.rs # Git interaction
-│ ├── player.rs # Spotify control
-│ └── watcher.rs # Branch monitor
-├── Cargo.toml # Dependencies
-└── config.json # Playlist configuration
 
 ## Contribution
 
